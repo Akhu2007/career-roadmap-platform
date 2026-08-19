@@ -5,6 +5,11 @@ function Profile() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [skills, setSkills] = useState([]);
+  const [analysis, setAnalysis] = useState({
+    matchedSkills: [],
+    missingSkills: [],
+    readinessScore: 0,
+  });
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -32,6 +37,9 @@ function Profile() {
       if (response.ok) {
         setMessage("Resume uploaded successfully!");
         setSkills(data.skills);
+        if (data.analysis) {
+          setAnalysis(data.analysis);
+        }
       } else {
         setMessage(data.message || "Upload failed");
       }
@@ -61,38 +69,6 @@ function Profile() {
       {/* Main Content */}
       <div className="profile-grid">
         {/* Personal Information */}
-        <section className="profile-card">
-          <div className="card-heading">
-            <div className="heading-icon">👤</div>
-
-            <div>
-              <h2>Personal Information</h2>
-              <p>Your basic profile details</p>
-            </div>
-          </div>
-
-          <div className="info-grid">
-            <div className="info-item">
-              <label>Full Name</label>
-              <strong>Akhilesh Kumar</strong>
-            </div>
-
-            <div className="info-item">
-              <label>Email</label>
-              <strong>akhilesh@gmail.com</strong>
-            </div>
-
-            <div className="info-item">
-              <label>Education</label>
-              <strong>B.Tech CSE</strong>
-            </div>
-
-            <div className="info-item">
-              <label>University</label>
-              <strong>Chitkara University</strong>
-            </div>
-          </div>
-        </section>
 
         {/* Resume Upload */}
         <section className="resume-card">
@@ -180,31 +156,60 @@ function Profile() {
         </section>
 
         {/* Career Readiness Preview */}
-        <section className="readiness-card">
+        <section className="skills-card">
           <div className="card-heading">
-            <div className="heading-icon">📈</div>
+            <div className="heading-icon">🎯</div>
 
             <div>
-              <h2>Career Readiness</h2>
-              <p>Your personalized career analysis</p>
+              <h2>Career Skill Analysis</h2>
+              <p>Skills compared with your target career</p>
             </div>
           </div>
 
-          <div className="readiness-content">
-            <div className="readiness-circle">
-              <span>--</span>
-              <small>Score</small>
-            </div>
+          <h3>Matched Skills</h3>
 
-            <div className="readiness-text">
-              <h3>Analysis coming next 🚀</h3>
+          <div className="skills-container">
+            {analysis.matchedSkills.map((skill) => (
+              <div className="skill-chip" key={skill}>
+                <span>✓</span>
+                {skill}
+              </div>
+            ))}
+          </div>
 
+          <h3>Missing Skills</h3>
+
+          <div className="skills-container">
+            {analysis.missingSkills.map((skill) => (
+              <div className="skill-chip missing-chip" key={skill}>
+                <span>○</span>
+                {skill}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* {Readiness} */}
+
+        <section className="readiness-card">
+          <div className="card-heading">
+            <div className="heading-icon readiness-icon">📊</div>
+            <div>
+              <h2>Career Readiness Score</h2>
               <p>
-                We'll compare your skills with your target career requirements
-                and calculate your readiness score.
+                See how prepared you are for your target career based on your
+                current skills.
               </p>
             </div>
+
+            <div className="readiness-score">
+              <div>{analysis.readinessScore}%</div>
+            </div>
           </div>
+          <p>
+            Your resume matches {analysis.readinessScore}% of the required
+            skills for the target career.
+          </p>
         </section>
       </div>
     </div>

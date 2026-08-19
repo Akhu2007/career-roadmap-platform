@@ -59,9 +59,11 @@ const uploadResume = async (req, res) => {
       text: pdfData.text,
       skills: detectedSkills,
       career: "Mern Stack Developer",
-      matchedSkills: analysis.matchedSkills,
-      missingSkills: analysis.missingSkills,
-      readinessScore: analysis.readinessScore,
+      analysis: {
+        matchedSkills: analysis.matchedSkills,
+        missingSkills: analysis.missingSkills,
+        readinessScore: analysis.readinessScore,
+      },
     });
   } catch (err) {
     console.log(err);
