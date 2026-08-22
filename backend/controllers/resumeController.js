@@ -23,6 +23,14 @@ const skillList = [
 
 const uploadResume = async (req, res) => {
   try {
+    const { career } = req.body;
+    console.log("Selected Career:", career);
+
+    if (!career || !careers[career]) {
+      return res.status(400).json({
+        message: "Invalid or missing career",
+      });
+    }
     console.log(req.file);
 
     // Read the uploaded PDF
@@ -36,7 +44,9 @@ const uploadResume = async (req, res) => {
       return resumeText.includes(skill.toLowerCase());
     });
 
-    const requiredSkills = careers["MERN Stack Developer"];
+    const requiredSkills = careers[career];
+    console.log("Selected Career:", career);
+    console.log("Required Skills:", requiredSkills);
 
     const analysis = analyzeCareer(detectedSkills, requiredSkills);
 
@@ -58,7 +68,7 @@ const uploadResume = async (req, res) => {
       file: req.file,
       text: pdfData.text,
       skills: detectedSkills,
-      career: "Mern Stack Developer",
+      career: career,
       analysis: {
         matchedSkills: analysis.matchedSkills,
         missingSkills: analysis.missingSkills,
