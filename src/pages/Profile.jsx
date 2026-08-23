@@ -6,7 +6,9 @@ function Profile() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [skills, setSkills] = useState([]);
-  const [career, setCareer] = useState("MERN Stack Developer");
+  const [career, setCareer] = useState(
+    localStorage.getItem("targetCareer") || "MERN Stack Developer",
+  );
   const [analysis, setAnalysis] = useState({
     matchedSkills: [],
     missingSkills: [],
@@ -84,13 +86,14 @@ function Profile() {
 
             <select
               value={career}
-              onChange={(e) => setCareer(e.target.value)}
+              onChange={(e) => {
+                setCareer(e.target.value);
+                localStorage.setItem("targetCareer", e.target.value);
+              }}
               className="career-select"
             >
               <option value="MERN Stack Developer">MERN Stack Developer</option>
-
               <option value="Java Developer">Java Developer</option>
-
               <option value="Frontend Developer">Frontend Developer</option>
             </select>
           </section>
