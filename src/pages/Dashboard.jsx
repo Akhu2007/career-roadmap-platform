@@ -2,6 +2,8 @@ import React from "react";
 import Navbar from "../components/Navbar";
 import "../css/dashboard.css";
 function Dashboard() {
+  const name = localStorage.getItem("userName") || "User";
+  const career = localStorage.getItem("targetCareer") | "MERN STack Developer";
   return (
     <>
       <Navbar />
