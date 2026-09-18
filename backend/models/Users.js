@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    careerGoal: {
+      type: String,
+      default: "",
+    },
+
     skills: {
       type: [String],
       default: [],

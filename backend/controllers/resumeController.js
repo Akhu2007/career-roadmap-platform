@@ -33,10 +33,9 @@ const uploadResume = async (req, res) => {
     }
     console.log(req.file);
 
-    // Read the uploaded PDF
     const pdfBuffer = fs.readFileSync(req.file.path);
 
-    // Extract text from PDF
+    ``;
     const pdfData = await pdfParse(pdfBuffer);
     const resumeText = pdfData.text.toLowerCase().replace(/\s+/g, " ");
 
