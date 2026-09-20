@@ -27,6 +27,19 @@ function Navbar() {
           <li>
             <Link to="/profile">Profile</Link>
           </li>
+
+          {/* Authentication */}
+          <li>
+            <Link to="/login" className="login-link">
+              Login
+            </Link>
+          </li>
+
+          <li>
+            <Link to="/signup" className="signup-link">
+              Sign Up
+            </Link>
+          </li>
         </ul>
       </nav>
     </header>
