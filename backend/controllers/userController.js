@@ -1,3 +1,4 @@
+const careers = require("../utils/careerData");
 const User = require("../models/Users");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -86,6 +87,34 @@ const loginUser = async (req, res) => {
   }
 };
 
+const updateCareerGoal = async (req, res) => {
+  try {
+    const { careerGoal } = req.body;
+
+    // Check whether career exists
+    if (!careers[careerGoal]) {
+      return res.status(400).json({
+        message: "Invalid career goal",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { careerGoal },
+      { new: true },
+    ).select("-password");
+
+    res.status(200).json({
+      message: "Career goal updated successfully",
+      user,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
 // GET CURRENT LOGGED-IN USER
 const getMe = async (req, res) => {
   res.status(200).json({
@@ -97,4 +126,5 @@ module.exports = {
   registerUser,
   loginUser,
   getMe,
+  updateCareerGoal,
 };

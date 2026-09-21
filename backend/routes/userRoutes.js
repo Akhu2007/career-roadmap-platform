@@ -6,6 +6,7 @@ const {
   registerUser,
   loginUser,
   getMe,
+  updateCareerGoal,
 } = require("../controllers/userController");
 
 const protect = require("../middleware/authMiddleware");
@@ -15,5 +16,7 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 router.get("/me", protect, getMe);
+
+router.put("/career", protect, updateCareerGoal);
 
 module.exports = router;

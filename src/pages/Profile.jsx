@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import "../css/Profile.css";
 
@@ -6,14 +6,40 @@ function Profile() {
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState("");
   const [skills, setSkills] = useState([]);
-  const [career, setCareer] = useState(
-    localStorage.getItem("targetCareer") || "MERN Stack Developer",
-  );
+  const [career, setCareer] = useState("");
   const [analysis, setAnalysis] = useState({
     matchedSkills: [],
     missingSkills: [],
     readinessScore: 0,
   });
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:5000/api/users/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setCareer(data.user.careerGoal);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -86,12 +112,43 @@ function Profile() {
 
             <select
               value={career}
-              onChange={(e) => {
-                setCareer(e.target.value);
-                localStorage.setItem("targetCareer", e.target.value);
+              onChange={async (e) => {
+                const selectedCareer = e.target.value;
+
+                setCareer(selectedCareer);
+
+                const token = localStorage.getItem("token");
+
+                try {
+                  const response = await fetch(
+                    "http://localhost:5000/api/users/career",
+                    {
+                      method: "PUT",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({
+                        careerGoal: selectedCareer,
+                      }),
+                    },
+                  );
+
+                  const data = await response.json();
+
+                  if (!response.ok) {
+                    console.log(data.message);
+                    return;
+                  }
+
+                  console.log("Career saved:", data.user.careerGoal);
+                } catch (error) {
+                  console.log("Error saving career:", error);
+                }
               }}
               className="career-select"
             >
+              <option value="">Select Career</option>
               <option value="MERN Stack Developer">MERN Stack Developer</option>
               <option value="Java Developer">Java Developer</option>
               <option value="Frontend Developer">Frontend Developer</option>
