@@ -1,9 +1,30 @@
 const express = require("express");
+
 const router = express.Router();
 
-const upload = require("../middleware/uploadMiddleware");
+const multer = require("multer");
+
 const { uploadResume } = require("../controllers/resumeController");
 
-router.post("/upload", upload.single("resume"), uploadResume);
+const protect = require("../middleware/authMiddleware");
+
+// Storage configuration
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+// Multer upload middleware
+const upload = multer({
+  storage: storage,
+});
+
+// Resume upload route
+router.post("/upload", protect, upload.single("resume"), uploadResume);
 
 module.exports = router;

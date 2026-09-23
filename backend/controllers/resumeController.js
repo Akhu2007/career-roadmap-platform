@@ -1,7 +1,9 @@
 const fs = require("fs");
 const pdfParse = require("pdf-parse");
+
 const careers = require("../utils/careerData");
 const analyzeCareer = require("../utils/careerAnalysis");
+const User = require("../models/Users");
 
 const skillList = [
   "HTML",
@@ -19,55 +21,88 @@ const skillList = [
   "Data Structures and Algorithms",
   "Git",
   "GitHub",
+  "OOP",
+  "Spring Boot",
 ];
 
 const uploadResume = async (req, res) => {
   try {
-    const { career } = req.body;
-    console.log("Selected Career:", career);
-
-    if (!career || !careers[career]) {
+    // Check whether resume was uploaded
+    if (!req.file) {
       return res.status(400).json({
-        message: "Invalid or missing career",
+        message: "Please upload a resume",
       });
     }
-    console.log(req.file);
 
+    // Logged-in user comes from JWT middleware
+    const user = req.user;
+
+    console.log("Logged-in user:", user.email);
+    console.log("Career goal:", user.careerGoal);
+
+    // Read uploaded PDF
     const pdfBuffer = fs.readFileSync(req.file.path);
 
-    ``;
+    // Extract text from PDF
     const pdfData = await pdfParse(pdfBuffer);
+
     const resumeText = pdfData.text.toLowerCase().replace(/\s+/g, " ");
 
+    // Detect skills from resume
     const detectedSkills = skillList.filter((skill) => {
       return resumeText.includes(skill.toLowerCase());
     });
 
-    const requiredSkills = careers[career];
-    console.log("Selected Career:", career);
-    console.log("Required Skills:", requiredSkills);
+    // Get user's selected career
+    const careerGoal = user.careerGoal;
 
+    // Check whether career is valid
+    if (!careerGoal || !careers[careerGoal]) {
+      return res.status(400).json({
+        message: "Please select a valid career goal first",
+      });
+    }
+
+    // Get skills required for selected career
+    const requiredSkills = careers[careerGoal];
+
+    // Analyze resume
     const analysis = analyzeCareer(detectedSkills, requiredSkills);
 
-    console.log("========== RESUME TEXT ==========");
-    console.log(pdfData.text);
-    console.log("=================================");
+    console.log("========== RESUME ANALYSIS ==========");
 
-    console.log("========== DETECTED SKILLS ==========");
-    console.log(detectedSkills);
+    console.log("Career:", careerGoal);
 
-    console.log("========== CAREER ANALYSIS ==========");
-    console.log("Required:", requiredSkills);
-    console.log("Matched:", analysis.matchedSkills);
-    console.log("Missing:", analysis.missingSkills);
-    console.log("Score:", analysis.readinessScore);
+    console.log("Detected Skills:", detectedSkills);
+
+    console.log("Required Skills:", requiredSkills);
+
+    console.log("Matched Skills:", analysis.matchedSkills);
+
+    console.log("Missing Skills:", analysis.missingSkills);
+
+    console.log("Readiness Score:", analysis.readinessScore);
+
+    console.log("====================================");
+
+    // Save resume information to MongoDB
+    await User.findByIdAndUpdate(user._id, {
+      resume: req.file.filename,
+      skills: detectedSkills,
+      readinessScore: analysis.readinessScore,
+    });
 
     res.status(200).json({
-      message: "Resume uploaded successfully",
+      message: "Resume analyzed successfully",
+
+      career: careerGoal,
+
       file: req.file,
+
       text: pdfData.text,
+
       skills: detectedSkills,
-      career: career,
+
       analysis: {
         matchedSkills: analysis.matchedSkills,
         missingSkills: analysis.missingSkills,
@@ -83,4 +118,6 @@ const uploadResume = async (req, res) => {
   }
 };
 
-module.exports = { uploadResume };
+module.exports = {
+  uploadResume,
+};

@@ -52,29 +52,46 @@ function Profile() {
       return;
     }
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setMessage("Please login first");
+      return;
+    }
+
     const formData = new FormData();
 
     formData.append("resume", file);
-    formData.append("career", career);
 
     try {
       const response = await fetch("http://localhost:5000/api/resume/upload", {
         method: "POST",
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+
         body: formData,
       });
 
       const data = await response.json();
 
+      console.log("Resume analysis:", data);
+
       if (response.ok) {
-        setMessage("Resume uploaded successfully!");
-        setSkills(data.skills);
+        setMessage("Resume analyzed successfully!");
+
+        setSkills(data.skills || []);
+
         if (data.analysis) {
           setAnalysis(data.analysis);
         }
       } else {
-        setMessage(data.message || "Upload failed");
+        setMessage(data.message || "Resume analysis failed");
       }
     } catch (error) {
+      console.log(error);
+
       setMessage("Server error. Please try again.");
     }
   };
