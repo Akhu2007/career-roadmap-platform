@@ -86,11 +86,19 @@ const uploadResume = async (req, res) => {
     console.log("====================================");
 
     // Save resume information to MongoDB
-    await User.findByIdAndUpdate(user._id, {
-      resume: req.file.filename,
-      skills: detectedSkills,
-      readinessScore: analysis.readinessScore,
-    });
+    await User.findByIdAndUpdate(
+      user._id,
+      {
+        resume: req.file.filename,
+        skills: detectedSkills,
+        matchedSkills: analysis.matchedSkills,
+        missingSkills: analysis.missingSkills,
+        readinessScore: analysis.readinessScore,
+      },
+      {
+        new: true,
+      },
+    );
 
     res.status(200).json({
       message: "Resume analyzed successfully",
