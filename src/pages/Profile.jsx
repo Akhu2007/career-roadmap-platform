@@ -7,11 +7,18 @@ function Profile() {
   const [message, setMessage] = useState("");
   const [skills, setSkills] = useState([]);
   const [career, setCareer] = useState("");
+
   const [analysis, setAnalysis] = useState({
     matchedSkills: [],
     missingSkills: [],
     readinessScore: 0,
   });
+
+  const [user, setUser] = useState(null);
+
+  // =========================
+  // FETCH USER FROM MONGODB
+  // =========================
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -31,20 +38,46 @@ function Profile() {
         const data = await response.json();
 
         if (response.ok) {
-          setCareer(data.user.careerGoal);
+          const userData = data.user;
+
+          // Save complete user
+          setUser(userData);
+
+          // Career
+          setCareer(userData.careerGoal || "");
+
+          // Skills from MongoDB
+          setSkills(userData.skills || []);
+
+          // Analysis from MongoDB
+          setAnalysis({
+            matchedSkills: userData.matchedSkills || [],
+            missingSkills: userData.missingSkills || [],
+            readinessScore: userData.readinessScore || 0,
+          });
+        } else {
+          console.log(data.message);
         }
       } catch (error) {
-        console.log(error);
+        console.log("Error fetching user:", error);
       }
     };
 
     fetchUser();
   }, []);
 
+  // =========================
+  // FILE CHANGE
+  // =========================
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     setMessage("");
   };
+
+  // =========================
+  // RESUME UPLOAD
+  // =========================
 
   const handleUpload = async () => {
     if (!file) {
@@ -81,11 +114,20 @@ function Profile() {
       if (response.ok) {
         setMessage("Resume analyzed successfully!");
 
+        // Update skills
         setSkills(data.skills || []);
 
+        // Update analysis
         if (data.analysis) {
-          setAnalysis(data.analysis);
+          setAnalysis({
+            matchedSkills: data.analysis.matchedSkills || [],
+            missingSkills: data.analysis.missingSkills || [],
+            readinessScore: data.analysis.readinessScore || 0,
+          });
         }
+
+        // Remove selected file after successful upload
+        setFile(null);
       } else {
         setMessage(data.message || "Resume analysis failed");
       }
@@ -96,18 +138,80 @@ function Profile() {
     }
   };
 
+  // =========================
+  // CHANGE CAREER
+  // =========================
+
+  const handleCareerChange = async (e) => {
+    const selectedCareer = e.target.value;
+
+    setCareer(selectedCareer);
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/users/career", {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify({
+          careerGoal: selectedCareer,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.log(data.message);
+        return;
+      }
+
+      console.log("Career saved:", data.user.careerGoal);
+
+      /*
+        Important:
+
+        Changing career means the previous readiness
+        score may no longer be valid.
+
+        We will recalculate it when the resume
+        is uploaded again.
+      */
+
+      setAnalysis({
+        matchedSkills: [],
+        missingSkills: [],
+        readinessScore: 0,
+      });
+    } catch (error) {
+      console.log("Error saving career:", error);
+    }
+  };
+
   return (
     <>
       <Navbar />
+
       <div className="profile-page">
-        {/* Profile Header */}
+        {/* =========================
+            PROFILE HEADER
+        ========================= */}
+
         <section className="profile-header">
-          <div className="profile-avatar">A</div>
+          <div className="profile-avatar">
+            {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+          </div>
 
           <div className="profile-info">
-            <h1>Akhilesh Kumar</h1>
+            <h1>{user?.name || "User"}</h1>
+
             <p>B.Tech Computer Science Engineering</p>
-            <span>Chitkara University, Himachal Pradesh</span>
+
+            <span>{user?.college || "College information not added"}</span>
           </div>
 
           <div className="profile-status">
@@ -116,70 +220,52 @@ function Profile() {
           </div>
         </section>
 
-        {/* Main Content */}
+        {/* =========================
+            MAIN CONTENT
+        ========================= */}
+
         <div className="profile-grid">
+          {/* =========================
+              CAREER
+          ========================= */}
+
           <section className="career-card">
             <div className="card-heading">
               <div className="heading-icon">🎯</div>
+
               <div>
                 <h2>Target Career</h2>
+
                 <p>Choose the career you want to prepare for</p>
               </div>
             </div>
 
             <select
               value={career}
-              onChange={async (e) => {
-                const selectedCareer = e.target.value;
-
-                setCareer(selectedCareer);
-
-                const token = localStorage.getItem("token");
-
-                try {
-                  const response = await fetch(
-                    "http://localhost:5000/api/users/career",
-                    {
-                      method: "PUT",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({
-                        careerGoal: selectedCareer,
-                      }),
-                    },
-                  );
-
-                  const data = await response.json();
-
-                  if (!response.ok) {
-                    console.log(data.message);
-                    return;
-                  }
-
-                  console.log("Career saved:", data.user.careerGoal);
-                } catch (error) {
-                  console.log("Error saving career:", error);
-                }
-              }}
+              onChange={handleCareerChange}
               className="career-select"
             >
               <option value="">Select Career</option>
+
               <option value="MERN Stack Developer">MERN Stack Developer</option>
+
               <option value="Java Developer">Java Developer</option>
+
               <option value="Frontend Developer">Frontend Developer</option>
             </select>
           </section>
-          {/* Personal Information */}
 
-          {/* Resume Upload */}
+          {/* =========================
+              RESUME
+          ========================= */}
+
           <section className="resume-card">
             <div className="card-heading">
               <div className="heading-icon resume-icon">📄</div>
 
               <div>
                 <h2>Resume</h2>
+
                 <p>Upload your latest resume</p>
               </div>
             </div>
@@ -187,7 +273,13 @@ function Profile() {
             <div className="upload-area">
               <div className="upload-icon">↑</div>
 
-              <h3>{file ? file.name : "Upload your resume"}</h3>
+              <h3>
+                {file
+                  ? file.name
+                  : user?.resume
+                    ? "Resume uploaded"
+                    : "Upload your resume"}
+              </h3>
 
               <p>PDF format recommended • Maximum size 5MB</p>
 
@@ -217,18 +309,23 @@ function Profile() {
                 }
               >
                 {message.includes("successfully") ? "✓" : "!"}
+
                 {message}
               </div>
             )}
           </section>
 
-          {/* Skills Section */}
+          {/* =========================
+              DETECTED SKILLS
+          ========================= */}
+
           <section className="skills-card">
             <div className="card-heading">
               <div className="heading-icon skill-icon">⚡</div>
 
               <div>
                 <h2>Detected Skills</h2>
+
                 <p>Skills automatically extracted from your resume</p>
               </div>
 
@@ -237,9 +334,10 @@ function Profile() {
 
             {skills.length > 0 ? (
               <div className="skills-container">
-                {skills.map((skill, index) => (
-                  <div className="skill-chip" key={index}>
+                {skills.map((skill) => (
+                  <div className="skill-chip" key={skill}>
                     <span>✓</span>
+
                     {skill}
                   </div>
                 ))}
@@ -258,13 +356,17 @@ function Profile() {
             )}
           </section>
 
-          {/* Career Readiness Preview */}
+          {/* =========================
+              CAREER ANALYSIS
+          ========================= */}
+
           <section className="skills-card">
             <div className="card-heading">
               <div className="heading-icon">🎯</div>
 
               <div>
                 <h2>Career Skill Analysis</h2>
+
                 <p>Skills compared with your target career</p>
               </div>
             </div>
@@ -272,33 +374,45 @@ function Profile() {
             <h3>Matched Skills</h3>
 
             <div className="skills-container">
-              {analysis.matchedSkills.map((skill) => (
-                <div className="skill-chip" key={skill}>
-                  <span>✓</span>
-                  {skill}
-                </div>
-              ))}
+              {analysis.matchedSkills.length > 0 ? (
+                analysis.matchedSkills.map((skill) => (
+                  <div className="skill-chip" key={skill}>
+                    <span>✓</span>
+                    {skill}
+                  </div>
+                ))
+              ) : (
+                <p>No matched skills yet.</p>
+              )}
             </div>
 
             <h3>Missing Skills</h3>
 
             <div className="skills-container">
-              {analysis.missingSkills.map((skill) => (
-                <div className="skill-chip missing-chip" key={skill}>
-                  <span>○</span>
-                  {skill}
-                </div>
-              ))}
+              {analysis.missingSkills.length > 0 ? (
+                analysis.missingSkills.map((skill) => (
+                  <div className="skill-chip missing-chip" key={skill}>
+                    <span>○</span>
+                    {skill}
+                  </div>
+                ))
+              ) : (
+                <p>No missing skills.</p>
+              )}
             </div>
           </section>
 
-          {/* {Readiness} */}
+          {/* =========================
+              READINESS
+          ========================= */}
 
           <section className="readiness-card">
             <div className="card-heading">
               <div className="heading-icon readiness-icon">📊</div>
+
               <div>
                 <h2>Career Readiness Score</h2>
+
                 <p>
                   See how prepared you are for your target career based on your
                   current skills.
@@ -309,6 +423,7 @@ function Profile() {
                 <div>{analysis.readinessScore}%</div>
               </div>
             </div>
+
             <p>
               Your resume matches {analysis.readinessScore}% of the required
               skills for the target career.

@@ -28,6 +28,12 @@ function Dashboard() {
           setUser(data.user);
         } else {
           console.log(data.message);
+
+          // If token is invalid/expired
+          if (response.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+          }
         }
       } catch (error) {
         console.log("Error fetching user:", error);
@@ -38,6 +44,10 @@ function Dashboard() {
 
     fetchUser();
   }, []);
+
+  // =========================
+  // LOADING
+  // =========================
 
   if (loading) {
     return (
@@ -51,6 +61,10 @@ function Dashboard() {
     );
   }
 
+  // =========================
+  // NOT LOGGED IN
+  // =========================
+
   if (!user) {
     return (
       <>
@@ -63,6 +77,12 @@ function Dashboard() {
     );
   }
 
+  // =========================
+  // USER DATA
+  // =========================
+
+  const name = user.name || "User";
+
   const career = user.careerGoal || "No career selected";
 
   const skills = user.skills || [];
@@ -73,17 +93,22 @@ function Dashboard() {
 
   const readinessScore = user.readinessScore || 0;
 
+  const resumeUploaded = Boolean(user.resume);
+
   return (
     <>
       <Navbar />
 
       <div className="dashboard-page">
-        {/* Welcome */}
+        {/* =================================
+            WELCOME SECTION
+        ================================= */}
+
         <section className="dashboard-welcome">
           <div>
-            <h1>Welcome {user.name}</h1>
+            <h1>Welcome {name}</h1>
 
-            <p>Track your career progress and build the skills you need</p>
+            <p>Track your career progress and build the skills you need.</p>
           </div>
 
           <div className="dashboard-career">
@@ -93,8 +118,13 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* Stats */}
+        {/* =================================
+            STAT CARDS
+        ================================= */}
+
         <section className="dashboard-stats">
+          {/* Readiness */}
+
           <div className="dashboard-card">
             <div className="dashboard-icon">📊</div>
 
@@ -105,50 +135,93 @@ function Dashboard() {
             </div>
           </div>
 
+          {/* Detected Skills */}
+
+          <div className="dashboard-card">
+            <div className="dashboard-icon">🧠</div>
+
+            <div>
+              <p>Detected Skills</p>
+
+              <h2>{skills.length}</h2>
+            </div>
+          </div>
+
+          {/* Matched Skills */}
+
           <div className="dashboard-card">
             <div className="dashboard-icon">✅</div>
 
             <div>
-              <p>Detected Skills</p>
+              <p>Matched Skills</p>
 
               <h2>{matchedSkills.length}</h2>
             </div>
           </div>
 
-          <div className="dashboard-card">
-            <div className="dashboard-icon">📚</div>
-
-            <div>
-              <p>Career Goal</p>
-
-              <h2>
-                {career === "MERN Stack Developer"
-                  ? "MERN"
-                  : career === "Java Developer"
-                    ? "Java"
-                    : "Frontend"}
-              </h2>
-            </div>
-          </div>
+          {/* Resume */}
 
           <div className="dashboard-card">
-            <div className="dashboard-icon">🚀</div>
+            <div className="dashboard-icon">📄</div>
 
             <div>
               <p>Resume Status</p>
 
-              <h2>{user.resume ? "Uploaded" : "Pending"}</h2>
+              <h2>{resumeUploaded ? "Uploaded" : "Pending"}</h2>
             </div>
           </div>
         </section>
 
-        {/* Skills */}
+        {/* =================================
+            CAREER INFORMATION
+        ================================= */}
+
+        <section className="dashboard-section">
+          <div className="section-title">
+            <div>
+              <h2>Career Overview</h2>
+
+              <p>Your current career preparation status.</p>
+            </div>
+          </div>
+
+          <div className="career-overview">
+            <div className="overview-item">
+              <span>Target Career</span>
+
+              <strong>{career}</strong>
+            </div>
+
+            <div className="overview-item">
+              <span>Detected Skills</span>
+
+              <strong>{skills.length}</strong>
+            </div>
+
+            <div className="overview-item">
+              <span>Matched Skills</span>
+
+              <strong>{matchedSkills.length}</strong>
+            </div>
+
+            <div className="overview-item">
+              <span>Missing Skills</span>
+
+              <strong>{missingSkills.length}</strong>
+            </div>
+          </div>
+        </section>
+
+        {/* =================================
+            DETECTED SKILLS
+        ================================= */}
+
         <section className="dashboard-section">
           <div className="section-title">
             <div>
               <h2>Your Skills</h2>
 
-              <p>Skills detected from your resume</p>
+              <p>Skills detected from your resume.</p>
             </div>
           </div>
 
@@ -161,15 +234,75 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* Progress */}
+        {/* =================================
+            MATCHED SKILLS
+        ================================= */}
+
+        <section className="dashboard-section">
+          <div className="section-title">
+            <div>
+              <h2>Matched Skills</h2>
+
+              <p>Skills from your resume that match your target career.</p>
+            </div>
+          </div>
+
+          <div className="dashboard-skills">
+            {matchedSkills.length > 0 ? (
+              matchedSkills.map((skill) => <span key={skill}>✓ {skill}</span>)
+            ) : (
+              <p>
+                No matched skills yet. Upload a resume to analyze your career
+                readiness.
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* =================================
+            MISSING SKILLS
+        ================================= */}
+
+        <section className="dashboard-section">
+          <div className="section-title">
+            <div>
+              <h2>Missing Skills</h2>
+
+              <p>Skills you still need to learn for your target career.</p>
+            </div>
+          </div>
+
+          <div className="dashboard-skills">
+            {missingSkills.length > 0 ? (
+              missingSkills.map((skill) => (
+                <span key={skill} className="missing-skill">
+                  ○ {skill}
+                </span>
+              ))
+            ) : (
+              <p>
+                {resumeUploaded
+                  ? "Great! No missing skills detected."
+                  : "Upload your resume to identify missing skills."}
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* =================================
+            CAREER PROGRESS
+        ================================= */}
+
         <section className="dashboard-section">
           <div className="section-title">
             <div>
               <h2>Career Progress</h2>
 
-              <p>Your progress towards becoming a {career}</p>
+              <p>Your progress towards becoming a {career}.</p>
             </div>
           </div>
+
+          {/* Progress Bar */}
 
           <div className="progress-bar">
             <div
@@ -187,15 +320,22 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* Quick Actions */}
+        {/* =================================
+            QUICK ACTIONS
+        ================================= */}
+
         <section className="dashboard-actions">
+          {/* Roadmap */}
+
           <div className="action-card">
             <div className="action-icon">🗺️</div>
 
             <div>
               <h3>Career Roadmap</h3>
 
-              <p>Follow a personalized learning path.</p>
+              <p>
+                Follow a personalized learning path based on your career goal.
+              </p>
             </div>
 
             <button
@@ -206,6 +346,8 @@ function Dashboard() {
               View Roadmap →
             </button>
           </div>
+
+          {/* Opportunities */}
 
           <div className="action-card">
             <div className="action-icon">💼</div>

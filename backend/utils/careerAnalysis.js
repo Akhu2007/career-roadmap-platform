@@ -1,17 +1,23 @@
 const analyzeCareer = (userSkills, requiredSkills) => {
-  const normalizedSkills = userSkills.map((skill) => skill.toLowerCase());
-
-  const matchedSkills = requiredSkills.filter((skill) =>
-    normalizedSkills.includes(skill.toLowerCase()),
+  const matchedSkills = requiredSkills.filter((requiredSkill) =>
+    userSkills.some(
+      (userSkill) =>
+        userSkill.trim().toLowerCase() === requiredSkill.trim().toLowerCase(),
+    ),
   );
 
   const missingSkills = requiredSkills.filter(
-    (skill) => !normalizedSkills.includes(skill.toLowerCase()),
+    (requiredSkill) =>
+      !userSkills.some(
+        (userSkill) =>
+          userSkill.trim().toLowerCase() === requiredSkill.trim().toLowerCase(),
+      ),
   );
 
-  const readinessScore = Math.round(
-    (matchedSkills.length / requiredSkills.length) * 100,
-  );
+  const readinessScore =
+    requiredSkills.length === 0
+      ? 0
+      : Math.round((matchedSkills.length / requiredSkills.length) * 100);
 
   return {
     matchedSkills,
