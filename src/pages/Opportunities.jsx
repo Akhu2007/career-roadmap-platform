@@ -173,8 +173,8 @@ function Opportunities() {
 
                   <div className="opportunity-skills">
                     {opportunity.skills && opportunity.skills.length > 0 ? (
-                      opportunity.skills.map((skill) => (
-                        <span key={skill}>{skill}</span>
+                      opportunity.skills.map((skill, index) => (
+                        <span key={`${skill}-${index}`}>{skill}</span>
                       ))
                     ) : (
                       <span>Software Development</span>

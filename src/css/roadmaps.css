@@ -66,6 +66,39 @@
   color: #777;
 }
 
+.roadmap-summary {
+  background: #f5f7ff;
+  border: 1px solid #e2e6f5;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin: 25px auto;
+  width: 90%;
+  max-width: 900px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.roadmap-summary h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.roadmap-summary p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.roadmap-summary strong {
+  color: #222;
+}
+
+.roadmap-summary strong {
+  color: #222;
+}
+
 @media (max-width: 600px) {
   .roadmap-page {
     padding: 30px 15px;
